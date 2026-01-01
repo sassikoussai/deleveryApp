@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delivery App - Service Testing</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 30px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .gateway-info {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .gateway-info input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .service-card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .service-card h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: background 0.3s;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .btn:hover {
+            background: #5568d3;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .result {
+            margin-top: 15px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 4px;
+            border-left: 4px solid #667eea;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .result pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-size: 12px;
+            color: #333;
+        }
+
+        .error {
+            border-left-color: #dc3545;
+            background: #f8d7da;
+        }
+
+        .success {
+            border-left-color: #28a745;
+            background: #d4edda;
+        }
+
+        .loading {
+            text-align: center;
+            color: #667eea;
+            font-weight: 500;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-group .btn {
+            flex: 1;
+            margin-top: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Delivery App - Service Testing Dashboard</h1>
+        
+        <div class="gateway-info">
+            <label for="gateway-url"><strong>Gateway URL:</strong></label>
+            <input type="text" id="gateway-url" value="http://localhost:8089" placeholder="http://localhost:8089">
+        </div>
+
+        <div class="services-grid">
+            <!-- User Service -->
+            <div class="service-card">
+                <h2>👤 User Service</h2>
+                <h3 style="color: #667eea; margin: 15px 0 10px 0; font-size: 16px;">Create User</h3>
+                <div class="form-group">
+                    <label>First Name:</label>
+                    <input type="text" id="user-first-name" placeholder="John">
+                </div>
+                <div class="form-group">
+                    <label>Last Name:</label>
+                    <input type="text" id="user-last-name" placeholder="Doe">
+                </div>
+                <div class="form-group">
+                    <label>Email:</label>
+                    <input type="email" id="user-email" placeholder="john.doe@example.com">
+                </div>
+                <button class="btn" onclick="createUser()">Create User</button>
+                <hr style="margin: 20px 0; border: 1px solid #ddd;">
+                <h3 style="color: #667eea; margin: 15px 0 10px 0; font-size: 16px;">Get User</h3>
+                <div class="form-group">
+                    <label>User ID:</label>
+                    <input type="number" id="user-id" placeholder="Enter user ID">
+                </div>
+                <div class="btn-group">
+                    <button class="btn btn-secondary" onclick="getAllUsers()">Get All Users</button>
+                    <button class="btn btn-secondary" onclick="getUserById()">Get User by ID</button>
+                </div>
+                <div id="user-result" class="result" style="display: none;"></div>
+            </div>
+
+            <!-- Restaurant Service -->
+            <div class="service-card">
+                <h2>🍕 Restaurant Service</h2>
+                <h3 style="color: #667eea; margin: 15px 0 10px 0; font-size: 16px;">Create Restaurant</h3>
+                <div class="form-group">
+                    <label>Name:</label>
+                    <input type="text" id="restaurant-name" placeholder="Pizza Palace">
+                </div>
+                <div class="form-group">
+                    <label>Address:</label>
+                    <input type="text" id="restaurant-address" placeholder="123 Main St, City">
+                </div>
+                <div class="form-group">
+                    <label>Description:</label>
+                    <input type="text" id="restaurant-description" placeholder="Delicious pizza and pasta">
+                </div>
+                <button class="btn" onclick="createRestaurant()">Create Restaurant</button>
+                <hr style="margin: 20px 0; border: 1px solid #ddd;">
+                <h3 style="color: #667eea; margin: 15px 0 10px 0; font-size: 16px;">Create Menu Item</h3>
+                <div class="form-group">
+                    <label>Restaurant ID:</label>
+                    <input type="number" id="menu-restaurant-id" placeholder="Restaurant ID">
+                </div>
+                <div class="form-group">
+                    <label>Item Name:</label>
+                    <input type="text" id="menu-item-name" placeholder="Margherita Pizza">
+                </div>
+                <div class="form-group">
+                    <label>Description:</label>
+                    <input type="text" id="menu-item-description" placeholder="Classic tomato and mozzarella">
+                </div>
+                <div class="form-group">
+                    <label>Price:</label>
+                    <input type="number" step="0.01" id="menu-item-price" placeholder="12.99">
+                </div>
+                <div class="form-group">
+                    <label>Category:</label>
+                    <select id="menu-item-category">
+                        <option value="Appetizer">Appetizer</option>
+                        <option value="Main Course">Main Course</option>
+                        <option value="Dessert">Dessert</option>
+                        <option value="Beverage">Beverage</option>
+                        <option value="Side">Side</option>
+                    </select>
+                </div>
+                <button class="btn" onclick="createMenuItem()">Create Menu Item</button>
+                <hr style="margin: 20px 0; border: 1px solid #ddd;">
+                <h3 style="color: #667eea; margin: 15px 0 10px 0; font-size: 16px;">Get Restaurant</h3>
+                <div class="form-group">
+                    <label>Restaurant ID:</label>
+                    <input type="number" id="restaurant-id" placeholder="Enter restaurant ID">
+                </div>
+                <div class="btn-group">
+                    <button class="btn btn-secondary" onclick="getAllRestaurants()">Get All Restaurants</button>
+                    <button class="btn btn-secondary" onclick="getRestaurantById()">Get Restaurant</button>
+                    <button class="btn btn-secondary" onclick="getMenuItems()">Get Menu Items</button>
+                </div>
+                <div id="restaurant-result" class="result" style="display: none;"></div>
+            </div>
+
+            <!-- Order Service -->
+            <div class="service-card">
+                <h2>📦 Order Service</h2>
+                <div class="form-group">
+                    <label>User ID:</label>
+                    <input type="number" id="order-user-id" placeholder="User ID">
+                </div>
+                <div class="form-group">
+                    <label>Restaurant ID:</label>
+                    <input type="number" id="order-restaurant-id" placeholder="Restaurant ID">
+                </div>
+                <div class="form-group">
+                    <label>Total Price:</label>
+                    <input type="number" step="0.01" id="order-price" placeholder="25.99">
+                </div>
+                <div class="form-group">
+                    <label>Order ID:</label>
+                    <input type="number" id="order-id" placeholder="Enter order ID">
+                </div>
+                <div class="btn-group">
+                    <button class="btn" onclick="createOrder()">Create Order</button>
+                    <button class="btn btn-secondary" onclick="getOrderById()">Get Order</button>
+                    <button class="btn btn-secondary" onclick="getOrdersByUser()">Get User Orders</button>
+                </div>
+                <div id="order-result" class="result" style="display: none;"></div>
+            </div>
+
+            <!-- Delivery Service -->
+            <div class="service-card">
+                <h2>🚚 Delivery Service</h2>
+                <div class="form-group">
+                    <label>Order ID:</label>
+                    <input type="number" id="delivery-order-id" placeholder="Order ID">
+                </div>
+                <div class="form-group">
+                    <label>Courier Name:</label>
+                    <input type="text" id="courier-name" placeholder="John Doe">
+                </div>
+                <div class="form-group">
+                    <label>Delivery ID:</label>
+                    <input type="number" id="delivery-id" placeholder="Enter delivery ID">
+                </div>
+                <div class="btn-group">
+                    <button class="btn" onclick="createDelivery()">Create Delivery</button>
+                    <button class="btn btn-secondary" onclick="getDeliveryById()">Get Delivery</button>
+                </div>
+                <div id="delivery-result" class="result" style="display: none;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const GATEWAY_URL = () => document.getElementById('gateway-url').value || 'http://localhost:8089';
+
+        function showResult(elementId, data, isError = false) {
+            const resultDiv = document.getElementById(elementId);
+            resultDiv.style.display = 'block';
+            resultDiv.className = `result ${isError ? 'error' : 'success'}`;
+            resultDiv.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+        }
+
+        function showLoading(elementId) {
+            const resultDiv = document.getElementById(elementId);
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result loading';
+            resultDiv.innerHTML = '<p>Loading...</p>';
+        }
+
+        async function makeRequest(url, options = {}) {
+            try {
+                console.log('Making request to:', url, 'with options:', options);
+                const response = await fetch(url, {
+                    ...options,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...options.headers
+                    }
+                });
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('Response error:', response.status, errorText);
+                    return { 
+                        success: false, 
+                        data: { 
+                            error: `HTTP ${response.status}: ${errorText || response.statusText}`,
+                            status: response.status 
+                        }, 
+                        status: response.status 
+                    };
+                }
+                
+                const data = await response.json();
+                return { success: true, data, status: response.status };
+            } catch (error) {
+                console.error('Request failed:', error);
+                return { 
+                    success: false, 
+                    data: { 
+                        error: error.message || 'Failed to fetch. Make sure the gateway is running on ' + GATEWAY_URL(),
+                        details: error.toString()
+                    }, 
+                    status: 0 
+                };
+            }
+        }
+
+        // User Service Functions
+        async function createUser() {
+            const firstName = document.getElementById('user-first-name').value;
+            const lastName = document.getElementById('user-last-name').value;
+            const email = document.getElementById('user-email').value;
+
+            if (!firstName || !lastName || !email) {
+                showResult('user-result', { error: 'Please fill in all fields' }, true);
+                return;
+            }
+
+            showLoading('user-result');
+            const result = await makeRequest(`${GATEWAY_URL()}/api/users`, {
+                method: 'POST',
+                body: JSON.stringify({
+                    firstName: firstName,
+                    lastName: lastName,
+                    email: email
+                })
+            });
+            showResult('user-result', result, !result.success);
+        }
+
+        async function getAllUsers() {
+            showLoading('user-result');
+            const result = await makeRequest(`${GATEWAY_URL()}/api/users`);
+            showResult('user-result', result, !result.success);
+        }
+
+        async function getUserById() {
+            const userId = document.getElementById('user-id').value;
+            if (!userId) {
+                showResult('user-result', { error: 'Please enter a user ID' }, true);
+                return;
+            }
+            showLoading('user-result');
+            const result = await makeRequest(`${GATEWAY_URL()}/api/users/${userId}`);
+            showResult('user-result', result, !result.success);
+        }
+
+        // Restaurant Service Functions
+        async function createRestaurant() {
+            const name = document.getElementById('restaurant-name').value;
+            const address = document.getElementById('restaurant-address').value;
+            const description = document.getElementById('restaurant-description').value;
+
+            if (!name || !address || !description) {
+                showResult('restaurant-result', { error: 'Please fill in all fields' }, true);
+                return;
+            }
+
+            showLoading('restaurant-result');
+            const result = await makeRequest(`${GATEWAY_URL()}/api/restaurants`, {
+                method: 'POST',
+                body: JSON.stringify({
+                    name: name,
+                    address: address,
+                    description: description
+                })
+            });
+            showResult('restaurant-result', result, !result.success);
+        }
+
+        async function createMenuItem() {
+            const restaurantId = document.getElementById('menu-restaurant-id').value;
+            const name = document.getElementById('menu-item-name').value;
+            const description = document.getElementById('menu-item-description').value;
+            const price = document.getElementById('menu-item-price').value;
+            const category = document.getElementById('menu-item-category').value;
+
+            if (!restaurantId || !name || !description || !price || !category) {
+                showResult('restaurant-result', { error: 'Please fill in all fields' }, true);
+                return;
+            }
+
+            showLoading('restaurant-result');
+            
+            // First get the restaurant URL to create the link
+            const restaurantUrl = `${GATEWAY_URL()}/api/restaurants/${restaurantId}`;
+            
+            // Spring Data REST expects a link to the restaurant
+            const result = await makeRequest(`${GATEWAY_URL()}/api/restaurants/menu-items`, {
+                method: 'POST',
+                body: JSON.stringify({
+                    name: name,
+                    description: description,
+                    price: parseFloat(price),
+                    category: category,
+                    restaurant: restaurantUrl
+                })
+            });
+            showResult('restaurant-result', result, !result.success);
+        }
+
+        async function getAllRestaurants() {
+            showLoading('restaurant-result');
+            const result = await makeRequest(`${GATEWAY_URL()}/api/restaurants`);
+            showResult('restaurant-result', result, !result.success);
+        }
+
+        async function getRestaurantById() {
+            const restaurantId = document.getElementById('restaurant-id').value;
+            if (!restaurantId) {
+                showResult('restaurant-result', { error: 'Please enter a restaurant ID' }, true);
+                return;
+            }
+            showLoading('restaurant-result');
+            const result = await makeRequest(`${GATEWAY_URL()}/api/restaurants/${restaurantId}`);
+            showResult('restaurant-result', result, !result.success);
+        }
+
+        async function getMenuItems() {
+            const restaurantId = document.getElementById('restaurant-id').value;
+            if (!restaurantId) {
+                showResult('restaurant-result', { error: 'Please enter a restaurant ID' }, true);
+                return;
+            }
+            showLoading('restaurant-result');
+            const result = await makeRequest(`${GATEWAY_URL()}/api/restaurants/menu-items/search/findByRestaurantId?restaurantId=${restaurantId}`);
+            showResult('restaurant-result', result, !result.success);
+        }
+
+        // Order Service Functions
+        async function createOrder() {
+            const userId = document.getElementById('order-user-id').value;
+            const restaurantId = document.getElementById('order-restaurant-id').value;
+            const price = document.getElementById('order-price').value;
+
+            if (!userId || !restaurantId || !price) {
+                showResult('order-result', { error: 'Please fill in all fields' }, true);
+                return;
+            }
+
+            showLoading('order-result');
+            const result = await makeRequest(`${GATEWAY_URL()}/api/orders/`, {
+                method: 'POST',
+                body: JSON.stringify({
+                    user_id: parseInt(userId),
+                    restaurant_id: parseInt(restaurantId),
+                    total_price: parseFloat(price)
+                })
+            });
+            showResult('order-result', result, !result.success);
+        }
+
+        async function getOrderById() {
+            const orderId = document.getElementById('order-id').value;
+            if (!orderId) {
+                showResult('order-result', { error: 'Please enter an order ID' }, true);
+                return;
+            }
+            showLoading('order-result');
+            const result = await makeRequest(`${GATEWAY_URL()}/api/orders/${orderId}/`);
+            showResult('order-result', result, !result.success);
+        }
+
+        async function getOrdersByUser() {
+            const userId = document.getElementById('order-user-id').value;
+            if (!userId) {
+                showResult('order-result', { error: 'Please enter a user ID' }, true);
+                return;
+            }
+            showLoading('order-result');
+            const result = await makeRequest(`${GATEWAY_URL()}/api/orders/user/${userId}/`);
+            showResult('order-result', result, !result.success);
+        }
+
+        // Delivery Service Functions
+        async function createDelivery() {
+            const orderId = document.getElementById('delivery-order-id').value;
+            const courierName = document.getElementById('courier-name').value;
+
+            if (!orderId || !courierName) {
+                showResult('delivery-result', { error: 'Please fill in all fields' }, true);
+                return;
+            }
+
+            showLoading('delivery-result');
+            const result = await makeRequest(`${GATEWAY_URL()}/api/deliveries/`, {
+                method: 'POST',
+                body: JSON.stringify({
+                    order_id: parseInt(orderId),
+                    courier_name: courierName
+                })
+            });
+            showResult('delivery-result', result, !result.success);
+        }
+
+        async function getDeliveryById() {
+            const deliveryId = document.getElementById('delivery-id').value;
+            if (!deliveryId) {
+                showResult('delivery-result', { error: 'Please enter a delivery ID' }, true);
+                return;
+            }
+            showLoading('delivery-result');
+            const result = await makeRequest(`${GATEWAY_URL()}/api/deliveries/${deliveryId}/`);
+            showResult('delivery-result', result, !result.success);
+        }
+    </script>
+</body>
+</html>
+
