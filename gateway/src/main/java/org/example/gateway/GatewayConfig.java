@@ -24,8 +24,8 @@ public class GatewayConfig {
                 
                 // Menu Items Route (must come before restaurants to match first)
                 .route("menu-items-service", r -> r
-                        .path("/api/restaurants/menu-items/**")
-                        .filters(f -> f.rewritePath("/api/restaurants/menu-items/(?<segment>.*)", "/menu-items/${segment}"))
+                        .path("/api/restaurants/menu-items", "/api/restaurants/menu-items/**")
+                        .filters(f -> f.rewritePath("/api/restaurants/menu-items(?<segment>.*)", "/menu-items${segment}"))
                         .uri("lb://RESTAURANTSERVICE"))
                 
                 // Restaurant Service Route

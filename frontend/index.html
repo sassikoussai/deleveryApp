@@ -447,18 +447,15 @@
 
             showLoading('restaurant-result');
             
-            // First get the restaurant URL to create the link
-            const restaurantUrl = `${GATEWAY_URL()}/api/restaurants/${restaurantId}`;
-            
-            // Spring Data REST expects a link to the restaurant
+            // Use custom controller that accepts restaurant ID directly
             const result = await makeRequest(`${GATEWAY_URL()}/api/restaurants/menu-items`, {
                 method: 'POST',
                 body: JSON.stringify({
+                    restaurantId: parseInt(restaurantId),
                     name: name,
                     description: description,
-                    price: parseFloat(price),
-                    category: category,
-                    restaurant: restaurantUrl
+                    price: price.toString(),
+                    category: category
                 })
             });
             showResult('restaurant-result', result, !result.success);
@@ -488,6 +485,7 @@
                 return;
             }
             showLoading('restaurant-result');
+            // Spring Data REST endpoint: GET /api/restaurants/menu-items/search/findByRestaurantId?restaurantId={id}
             const result = await makeRequest(`${GATEWAY_URL()}/api/restaurants/menu-items/search/findByRestaurantId?restaurantId=${restaurantId}`);
             showResult('restaurant-result', result, !result.success);
         }
