@@ -1,0 +1,45 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  # Eureka Server
+  - job_name: 'eureka-server'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['localhost:8761']
+        labels:
+          service: 'eureka-server'
+
+  # API Gateway
+  - job_name: 'gateway'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['localhost:8089']
+        labels:
+          service: 'gateway'
+
+  # User Service
+  - job_name: 'user-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['localhost:8082']
+        labels:
+          service: 'user-service'
+
+  # Restaurant Service
+  - job_name: 'restaurant-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['localhost:8083']
+        labels:
+          service: 'restaurant-service'
+
+  # Order Delivery Service (Django)
+  - job_name: 'order-delivery-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['localhost:8000']
+        labels:
+          service: 'order-delivery-service'
+

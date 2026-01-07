@@ -1,6 +1,7 @@
 from rest_framework.exceptions import NotFound, ValidationError as DRFValidationError
 from .models import Delivery, DeliveryStatus
 from orders.services import OrderService
+from order_delivery.prometheus_metrics import deliveries_created_total, active_deliveries
 
 
 class DeliveryService:
@@ -40,6 +41,12 @@ class DeliveryService:
             courier_name=courier_name.strip(),
             status=DeliveryStatus.ASSIGNED
         )
+        # Increment Prometheus metrics
+        deliveries_created_total.labels(status=DeliveryStatus.ASSIGNED).inc()
+        # Update active deliveries gauge
+        for status in [DeliveryStatus.ASSIGNED, DeliveryStatus.ON_THE_WAY]:
+            count = Delivery.objects.filter(status=status).count()
+            active_deliveries.labels(status=status).set(count)
         return delivery
 
     @staticmethod
@@ -116,5 +123,9 @@ class DeliveryService:
         
         delivery.status = new_status
         delivery.save()
+        # Update active deliveries gauge
+        for status in [DeliveryStatus.ASSIGNED, DeliveryStatus.ON_THE_WAY]:
+            count = Delivery.objects.filter(status=status).count()
+            active_deliveries.labels(status=status).set(count)
         return delivery
 

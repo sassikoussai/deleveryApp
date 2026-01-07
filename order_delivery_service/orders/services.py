@@ -1,6 +1,7 @@
 from rest_framework.exceptions import NotFound, ValidationError as DRFValidationError
 from .models import Order, OrderStatus
 from order_delivery.service_client import ServiceClient
+from order_delivery.prometheus_metrics import orders_created_total, active_orders
 
 
 class OrderService:
@@ -45,6 +46,9 @@ class OrderService:
             total_price=total_price,
             status=OrderStatus.CREATED
         )
+        # Increment Prometheus metrics
+        orders_created_total.labels(restaurant_id=str(restaurant_id)).inc()
+        active_orders.set(Order.objects.filter(status__in=[OrderStatus.CREATED, OrderStatus.CONFIRMED, OrderStatus.PREPARING, OrderStatus.DELIVERING]).count())
         return order
 
     @staticmethod
@@ -118,5 +122,7 @@ class OrderService:
         
         order.status = new_status
         order.save()
+        # Update active orders gauge
+        active_orders.set(Order.objects.filter(status__in=[OrderStatus.CREATED, OrderStatus.CONFIRMED, OrderStatus.PREPARING, OrderStatus.DELIVERING]).count())
         return order
 

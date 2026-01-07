@@ -32,8 +32,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'corsheaders',  # CORS support
-    'orders',
-    'delivery',
+    'orders.apps.OrdersConfig',
+    'delivery.apps.DeliveryConfig',
 ]
 
 MIDDLEWARE = [
@@ -42,6 +42,7 @@ MIDDLEWARE = [
     # CORS middleware removed - Gateway handles CORS to avoid duplicate headers
     # 'corsheaders.middleware.CorsMiddleware',  # Disabled to prevent duplicate CORS headers
     'django.middleware.common.CommonMiddleware',
+    'order_delivery.metrics_middleware.PrometheusMiddleware',  # Prometheus metrics middleware
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',

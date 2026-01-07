@@ -1,0 +1,180 @@
+version: '3.8'
+
+services:
+  # Eureka Server - Must start first
+  eureka-server:
+    build:
+      context: ./eureka_server
+      dockerfile: Dockerfile
+    container_name: eureka-server
+    ports:
+      - "8761:8761"
+    networks:
+      - microservices-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8761/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # User Service
+  user-service:
+    build:
+      context: ./User Service
+      dockerfile: Dockerfile
+    container_name: user-service
+    ports:
+      - "8082:8082"
+    environment:
+      - EUREKA_SERVER_URL=http://eureka-server:8761/eureka
+      - EUREKA_INSTANCE_HOSTNAME=user-service
+    volumes:
+      - user-service-db:/app
+    networks:
+      - microservices-network
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8082/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+
+  # Restaurant Service
+  restaurant-service:
+    build:
+      context: ./RestaurantService
+      dockerfile: Dockerfile
+    container_name: restaurant-service
+    ports:
+      - "8083:8083"
+    environment:
+      - EUREKA_SERVER_URL=http://eureka-server:8761/eureka
+      - EUREKA_INSTANCE_HOSTNAME=restaurant-service
+    volumes:
+      - restaurant-service-db:/app
+    networks:
+      - microservices-network
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8083/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+
+  # Order Delivery Service (Django)
+  order-delivery-service:
+    build:
+      context: ./order_delivery_service
+      dockerfile: Dockerfile
+    container_name: order-delivery-service
+    ports:
+      - "8000:8000"
+    environment:
+      - EUREKA_SERVER_URL=http://eureka-server:8761/eureka
+      - EUREKA_APP_NAME=ORDER-DELIVERY-SERVICE
+      - EUREKA_INSTANCE_HOST=order-delivery-service
+      - EUREKA_INSTANCE_PORT=8000
+      - EUREKA_INSTANCE_IP=order-delivery-service
+      - EUREKA_ENABLED=True
+    volumes:
+      - order-delivery-db:/app
+    networks:
+      - microservices-network
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health/"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+
+  # API Gateway - Must start after services are registered
+  gateway:
+    build:
+      context: ./gateway
+      dockerfile: Dockerfile
+    container_name: gateway
+    ports:
+      - "8089:8089"
+    environment:
+      - EUREKA_SERVER_URL=http://eureka-server:8761/eureka/
+    networks:
+      - microservices-network
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      user-service:
+        condition: service_healthy
+      restaurant-service:
+        condition: service_healthy
+      order-delivery-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8089/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # Prometheus
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+      - '--web.enable-lifecycle'
+    networks:
+      - microservices-network
+    depends_on:
+      - eureka-server
+      - user-service
+      - restaurant-service
+      - gateway
+      - order-delivery-service
+
+  # Grafana
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
+    networks:
+      - microservices-network
+    depends_on:
+      - prometheus
+
+volumes:
+  user-service-db:
+  restaurant-service-db:
+  order-delivery-db:
+  prometheus_data:
+  grafana_data:
+
+networks:
+  microservices-network:
+    driver: bridge
+
